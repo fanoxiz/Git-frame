@@ -13,17 +13,26 @@
 ```bash
 git clone https://github.com/fanoxiz/git-frame.git
 cd git-frame
-go build -o gitframe .
+go mod download
+go build -o gitframe ./src
 ```
 
-Запуск (Windows / Linux):
+Запуск (Windows):
 
 ```bash
 .\gitframe.exe [flags]
 ```
 
+Запуск (Linux / MacOS):
+
 ```bash
-./gitgrame [flags]
+./gitframe [flags]
+```
+
+Запуск без сборки:
+
+```bash
+go run ./src [флаги]
 ```
 
 ## Аргументы CLI
