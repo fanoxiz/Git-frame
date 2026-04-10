@@ -4,35 +4,31 @@
 
 ## Требования
 
-- Go 1.21+
+- Go 1.25+
+- GNU Make
 
 ## Сборка и запуск
 
-Сборка:
+Быстрый вариант:
 
 ```bash
-git clone https://github.com/fanoxiz/git-frame.git
-cd git-frame
-go mod download
-go build -o gitframe ./src
+go install github.com/fanoxiz/Git-frame/cmd/gitframe@latest
+export PATH="$(go env GOPATH)/bin:$PATH"
 ```
 
-Запуск (Windows):
+Сборка с исходным кодом:
 
 ```bash
-.\gitframe.exe [flags]
+git clone https://github.com/fanoxiz/Git-frame.git
+cd Git-frame
+make build
+./gitframe [флаги]
 ```
 
-Запуск (Linux / MacOS):
+Запуск без установки:
 
 ```bash
-./gitframe [flags]
-```
-
-Запуск без сборки:
-
-```bash
-go run ./src [флаги]
+make run ARGS="[флаги]"
 ```
 
 ## Аргументы CLI
@@ -54,25 +50,19 @@ go run ./src [флаги]
 Только .go файлы, сортировка по коммитам:
 
 ```bash
-./gitframe --extensions .go --order-by commits
-```
-
-По языкам + JSON:
-
-```bash
-./gitframe --languages golang,python --format json
+gitframe --extensions .go --order-by commits
 ```
 
 Исключить тесты и ограничить папкой `cmd`:
 
 ```bash
-./gitframe --exclude "*_test.go" --restrict-to "cmd/*"
+gitframe --exclude "*_test.go" --restrict-to "cmd/*"
 ```
 
 Использовать committer:
 
 ```bash
-./gitframe --use-committer
+gitframe --use-committer
 ```
 
 ## Конфиг языков

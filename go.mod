@@ -1,4 +1,4 @@
-module gitframe
+module github.com/fanoxiz/Git-frame
 
 go 1.25.0
 
