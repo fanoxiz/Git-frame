@@ -13,9 +13,15 @@ func GetPaths(repoPath string, revision string) ([]string, error) {
 	cmd.Dir = repoPath
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		checkCmd := exec.Command("git", "log", "-1")
-		checkCmd.Dir = repoPath
-		if checkErr := checkCmd.Run(); checkErr != nil {
+		if !isGitRepository(repoPath) {
+			return nil, fmt.Errorf("repository is not a git repository: %s", repoPath)
+		}
+
+		hasCommits, checkErr := hasAnyCommit(repoPath)
+		if checkErr != nil {
+			return nil, checkErr
+		}
+		if !hasCommits {
 			return []string{}, nil
 		}
 		return nil, fmt.Errorf("failed to execute git ls-tree: %s", strings.TrimSpace(string(output)))
@@ -26,6 +32,27 @@ func GetPaths(repoPath string, revision string) ([]string, error) {
 		return []string{}, nil
 	}
 	return strings.Split(text, "\n"), nil
+}
+
+func isGitRepository(repoPath string) bool {
+	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
+	cmd.Dir = repoPath
+	output, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+
+	return strings.TrimSpace(string(output)) == "true"
+}
+
+func hasAnyCommit(repoPath string) (bool, error) {
+	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
+	cmd.Dir = repoPath
+	if err := cmd.Run(); err != nil {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func CollectFileFacts(repoPath, revision, file string, useCommitter bool) ([]domain.FileFact, error) {

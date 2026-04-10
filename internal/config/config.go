@@ -54,16 +54,46 @@ func ParseCommand() (Config, error) {
 	return cfg, nil
 }
 
-func FindLanguageConfigPath() (string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
+func FindLanguageConfigPath(startDir string) (string, error) {
+	if strings.TrimSpace(startDir) == "" {
+		wd, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
+		startDir = wd
 	}
-	dir := wd
+
+	absStartDir, err := filepath.Abs(startDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve start directory %q: %w", startDir, err)
+	}
+
+	cfgPath := findLanguageConfig(absStartDir)
+	if cfgPath != "" {
+		return cfgPath, nil
+	}
+
+	wd, err := os.Getwd()
+	if err == nil {
+		absWd, absErr := filepath.Abs(wd)
+		if absErr == nil && absWd != absStartDir {
+			cfgPath = findLanguageConfig(absWd)
+			if cfgPath != "" {
+				return cfgPath, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("configs/language_extensions.json not found from %s up to root", absStartDir)
+}
+
+func findLanguageConfig(startDir string) string {
+	dir := startDir
+
 	for {
 		p := filepath.Join(dir, "configs", "language_extensions.json")
 		if st, err := os.Stat(p); err == nil && !st.IsDir() {
-			return p, nil
+			return p
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
@@ -71,7 +101,8 @@ func FindLanguageConfigPath() (string, error) {
 		}
 		dir = parent
 	}
-	return "", fmt.Errorf("configs/language_extensions.json not found from %s up to root", wd)
+
+	return ""
 }
 
 func LoadLanguageMap(jsonPath string) (map[string][]string, error) {

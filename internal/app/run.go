@@ -20,7 +20,7 @@ func Run() error {
 
 	langMap := make(map[string][]string)
 	if len(cfg.Languages) > 0 {
-		cfgPath, err := config.FindLanguageConfigPath()
+		cfgPath, err := config.FindLanguageConfigPath(cfg.Repository)
 		if err != nil {
 			return fmt.Errorf("failed to locate language config: %w", err)
 		}

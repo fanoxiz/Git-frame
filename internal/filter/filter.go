@@ -3,6 +3,7 @@ package filter
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -15,7 +16,11 @@ func FilterPaths(cfg domain.FilterOptions, paths []string, langMap map[string][]
 	useExtFilter := (len(cfg.Extensions) > 0)
 
 	for _, ext := range cfg.Extensions {
-		allowedExt[ext] = struct{}{}
+		normalizedExt := normalizeExtension(ext)
+		if normalizedExt == "" {
+			continue
+		}
+		allowedExt[normalizedExt] = struct{}{}
 	}
 	for _, lang := range cfg.Languages {
 		extensions, exists := langMap[strings.ToLower(lang)]
@@ -25,13 +30,17 @@ func FilterPaths(cfg domain.FilterOptions, paths []string, langMap map[string][]
 		}
 		useExtFilter = true
 		for _, ext := range extensions {
-			allowedExt[ext] = struct{}{}
+			normalizedExt := normalizeExtension(ext)
+			if normalizedExt == "" {
+				continue
+			}
+			allowedExt[normalizedExt] = struct{}{}
 		}
 	}
 
 	for _, file := range paths {
 		if useExtFilter {
-			ext := filepath.Ext(file)
+			ext := strings.ToLower(filepath.Ext(file))
 			if _, ok := allowedExt[ext]; !ok {
 				continue
 			}
@@ -48,9 +57,22 @@ func FilterPaths(cfg domain.FilterOptions, paths []string, langMap map[string][]
 	return filteredPaths
 }
 
+func normalizeExtension(ext string) string {
+	ext = strings.TrimSpace(strings.ToLower(ext))
+	if ext == "" {
+		return ""
+	}
+	if !strings.HasPrefix(ext, ".") {
+		ext = "." + ext
+	}
+	return ext
+}
+
 func matchesAnyPattern(filePath string, patterns []string) bool {
+	normalizedPath := filepath.ToSlash(filePath)
 	for _, pattern := range patterns {
-		matched, err := filepath.Match(pattern, filePath)
+		normalizedPattern := filepath.ToSlash(pattern)
+		matched, err := path.Match(normalizedPattern, normalizedPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warning: unknown glob pattern '%s': %v\n", pattern, err)
 			continue
